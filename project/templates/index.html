@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Appointment Scheduler</title>
+  <style>
+    /* General Reset */
+    body, html {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom right, #6a11cb, #2575fc);
+      color: #fff;
+    }
+
+    /* Center Content */
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    /* Card Style */
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      width: 90%;
+      max-width: 500px;
+    }
+
+    .card h1 {
+      margin-bottom: 20px;
+      font-size: 1.8rem;
+    }
+
+    .card input, .card button, .card select {
+      margin: 10px 0;
+      padding: 10px;
+      width: 90%;
+      max-width: 400px;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+
+    .card button {
+      background-color: #2575fc;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .card button:hover {
+      background-color: #1c5bd0;
+    }
+
+    /* Suggestions List */
+    .results {
+      margin-top: 20px;
+    }
+
+    .result-item {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      text-align: left;
+    }
+
+    .result-item h3 {
+      margin: 0;
+    }
+
+    .result-item p {
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>Appointment Scheduler</h1>
+      <input type="text" id="location" placeholder="Enter your location" required>
+      <input type="text" id="service" placeholder="Type of service (e.g., salon, clinic)" required>
+      <button onclick="findPlaces()">Find Nearby Services</button>
+      <div class="results" id="results"></div>
+    </div>
+  </div>
+
+  <script>
+    async function findPlaces() {
+      const location = document.getElementById('location').value;
+      const service = document.getElementById('service').value;
+      const resultsDiv = document.getElementById('results');
+
+      // Clear previous results
+      resultsDiv.innerHTML = '';
+
+      if (!location || !service) {
+        alert('Please enter both location and service type!');
+        return;
+      }
+
+      try {
+        // Make API request to Python backend
+        const response = await fetch('http://127.0.0.1:5000/find', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ location, service }),
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch data from the server');
+
+        const data = await response.json();
+
+        // Display suggestions
+        if (data.suggestions && data.suggestions.length > 0) {
+          data.suggestions.forEach((item, index) => {
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'result-item';
+            resultDiv.innerHTML = `
+              <h3>${index + 1}. ${item.place}</h3>
+              <p><strong>Address:</strong> ${item.address}</p>
+              <p><strong>Distance:</strong> ${item.distance_km} km</p>
+              <p><strong>Time in Traffic:</strong> ${item.duration_in_traffic_min} minutes</p>
+              <button onclick="bookSlot('${item.place}')">Book Appointment</button>
+            `;
+            resultsDiv.appendChild(resultDiv);
+          });
+        } else {
+          resultsDiv.innerHTML = '<p>No suggestions available.</p>';
+        }
+      } catch (error) {
+        console.error(error);
+        resultsDiv.innerHTML = '<p>Failed to fetch suggestions. Please try again.</p>';
+      }
+    }
+
+    async function bookSlot(placeName) {
+      const response = await fetch('http://127.0.0.1:5000/book', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ place: placeName }),
+      });
+
+      const data = await response.json();
+      alert(data.message);
+    }
+  </script>
+</body>
+</html>
