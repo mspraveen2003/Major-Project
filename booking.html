@@ -1,0 +1,124 @@
+<body>
+  <style>
+    /* Full page styling */
+body {
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #e0b9b9, #9ab7c5);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Centered container */
+.container {
+  background: #ffffff;
+  padding: 30px 40px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  width: 100%;
+}
+
+/* Header */
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+/* Label styles */
+label {
+  display: block;
+  margin: 12px 0 6px;
+  color: #555;
+  font-weight: 600;
+}
+
+/* Radio buttons */
+input[type="radio"] {
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  font-size: 15px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  margin-top: 4px;
+  box-sizing: border-box;
+  background-color: #f9f9f9;
+}
+
+input[type="submit"] {
+  margin-top: 20px;
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  background-color: #4CAF50;
+  color: rgb(255, 255, 255);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+input[type="submit"]:hover {
+  background-color: #43a047;
+}
+
+/* Flash message */
+.flash-success {
+  color: green;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 15px;
+}
+
+/* Back link */
+p a {
+  display: inline-block;
+  margin-top: 20px;
+  text-decoration: none;
+  color: #2196f3;
+  font-weight: bold;
+}
+
+p a:hover {
+  text-decoration: underline;
+}
+
+  </style>
+  <div class="container">
+    <h2>Book Appointment for {{ service['name'].capitalize() }}</h2>
+
+    {% if available_slots %}
+    <form method="post">
+      <label>Choose a slot:</label><br>
+      {% for slot in available_slots %}
+        <input type="radio" name="slot" value="{{ loop.index0 }}" id="slot{{ loop.index0 }}" required>
+        <label for="slot{{ loop.index0 }}">{{ slot.strftime('%Y-%m-%d %H:%M') }}</label><br>
+      {% endfor %}
+
+      <label>Place Name:</label>
+      <input type="text" name="place_name" placeholder="Enter place name" required><br>
+
+      <input type="submit" value="Book Appointment">
+    </form>
+    {% else %}
+      <p>No available slots today or tomorrow.</p>
+    {% endif %}
+
+    <p><a href="{{ url_for('select_service') }}">Back to Services</a></p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <p class="flash-success">{{ message }}</p>
+      {% endfor %}
+    {% endwith %}
+  </div>
+</body>
